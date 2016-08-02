@@ -1,0 +1,44 @@
+app:
+    resource:   "@AppBundle/Controller/"
+    type:       annotation
+    
+app_view_tasks:
+    pattern:     /tasks/view/all
+    defaults: { _controller: AppBundle:Default:ajaxViewAll }
+
+app_view_completetasks:
+    pattern:     /tasks/view/complete
+    defaults: { _controller: AppBundle:Default:ajaxViewComplete }    
+
+app_view_activetasks:
+    pattern:     /tasks/view/active
+    defaults: { _controller: AppBundle:Default:ajaxViewActive }    
+    
+app_view_task:
+    pattern:     /tasks/view
+    defaults: { _controller: AppBundle:Default:ajaxView }
+
+app_add_task:
+    pattern:     /tasks/add
+    defaults: { _controller: AppBundle:Default:ajaxCreate }
+    
+app_edit_task:
+    pattern:     /tasks/edit
+    defaults: { _controller: AppBundle:Default:ajaxUpdate }
+
+app_delete_task:
+    pattern:     /tasks/delete
+    defaults: { _controller: AppBundle:Default:ajaxRemove }
+
+app_restore_task:
+    pattern:     /tasks/restore
+    defaults: { _controller: AppBundle:Default:ajaxRestore }
+    
+app_active_task:
+    pattern:     /tasks/active
+    defaults: { _controller: AppBundle:Default:ajaxActive }
+
+app_complete_task:
+    pattern:     /tasks/complete
+    defaults: { _controller: AppBundle:Default:ajaxComplete }
+    

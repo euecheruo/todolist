@@ -25,9 +25,9 @@ class DefaultController extends Controller
 	
 	public function ajaxViewAllAction(Request $request) {
 		
-        //if (!$request->isXmlHttpRequest()) {
-        //    throw new NotFoundHttpException();
-        //}
+        if (!$request->isXmlHttpRequest()) {
+            throw new NotFoundHttpException();
+        }
 		
 		$response = $response = array('status' => 'success', 'count' => 0);
 		$er = $this->getDoctrine()->getManager()->getRepository('AppBundle:Task')

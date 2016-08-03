@@ -43,7 +43,6 @@ class DefaultController extends Controller
 				$response[] = array('id' => $task->getId(), 'title' => $task->getTitle(), 'note' => $task->getNote(), 'completed' => $task->getCompleted(), 'deleted' => $task->getDeleted());
 			}
 			$response['count'] = count($tasks);
-			return new JsonResponse($response, 200);
 		}
 		return new JsonResponse($response, 200);
 	}

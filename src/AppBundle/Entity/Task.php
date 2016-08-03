@@ -50,6 +50,13 @@ class Task
     private $deleted;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="clientIp", type="string", length=50)
+     */
+    private $clientIp;
+	
+    /**
      * @var \DateTime
      *
      * @ORM\Column(name="lastModified", type="datetime")
@@ -70,6 +77,7 @@ class Task
 		$this->note = '';
 		$this->completed = false;
 		$this->deleted = false;
+		$this->clientIp = $_SERVER['REMOTE_ADDR'];
 		$this->lastModified = $datetime;
 		$this->dateCreated = $datetime;
     }
@@ -175,6 +183,29 @@ class Task
     {
         return $this->deleted;
     }
+
+    /**
+     * Set clientIp
+     *
+     * @param string $clientIp
+     * @return Task
+     */
+    public function setClientIp($clientIp)
+    {
+        $this->clientIp = $clientIp;
+
+        return $this;
+    }
+
+    /**
+     * Get clientIp
+     *
+     * @return string 
+     */
+    public function getClientIp()
+    {
+        return $this->clientIp;
+    }	
 
     /**
      * Set lastModified

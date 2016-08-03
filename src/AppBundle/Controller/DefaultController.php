@@ -34,7 +34,9 @@ class DefaultController extends Controller
 				   ->createQueryBuilder('t')
 				   ->where('t.deleted = :deleted')
 				   ->setParameter('deleted', false)
-					->addOrderBy('t.dateCreated', 'ASC');
+				   ->andWhere('t.clientIp = :clientIp')
+				   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR'])
+				   ->addOrderBy('t.dateCreated', 'ASC');
 					
 		$tasks = $er->getQuery()->getResult();
 		if($tasks) {
@@ -43,6 +45,7 @@ class DefaultController extends Controller
 				$response[] = array('id' => $task->getId(), 'title' => $task->getTitle(), 'note' => $task->getNote(), 'completed' => $task->getCompleted(), 'deleted' => $task->getDeleted());
 			}
 			$response['count'] = count($tasks);
+			return new JsonResponse($response, 200);
 		}
 		return new JsonResponse($response, 200);
 	}
@@ -60,6 +63,8 @@ class DefaultController extends Controller
 				   ->setParameter('completed', true)
 				   ->andWhere('t.deleted = :deleted')
 				   ->setParameter('deleted', false)
+				   ->andWhere('t.clientIp = :clientIp')
+				   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR'])
 				   ->addOrderBy('t.dateCreated', 'ASC');
 					
 		$tasks = $er->getQuery()->getResult();
@@ -85,6 +90,8 @@ class DefaultController extends Controller
 				   ->setParameter('completed', false)
 				   ->andWhere('t.deleted = :deleted')
 				   ->setParameter('deleted', false)
+				   ->andWhere('t.clientIp = :clientIp')
+				   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR'])
 				   ->addOrderBy('t.dateCreated', 'ASC');
 					
 		$tasks = $er->getQuery()->getResult();
@@ -111,7 +118,9 @@ class DefaultController extends Controller
 					   ->where('t.id = :taskId')
 					   ->setParameter('taskId', $id)
 					   ->andWhere('t.deleted = :deleted')
-					   ->setParameter('deleted', false);
+					   ->setParameter('deleted', false)
+					   ->andWhere('t.clientIp = :clientIp')
+					   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
 					   
 			$task = $er->getQuery()->getResult();
 			if($task) {
@@ -169,7 +178,9 @@ class DefaultController extends Controller
 						   ->where('t.id = :taskId')
 						   ->setParameter('taskId', $id)
 						   ->andWhere('t.deleted = :deleted')
-						   ->setParameter('deleted', false);
+						   ->setParameter('deleted', false)
+						   ->andWhere('t.clientIp = :clientIp')
+						   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
 						   
 				$task = $er->getQuery()->getResult();
 				if($task) {
@@ -198,7 +209,9 @@ class DefaultController extends Controller
 					   ->set('t.lastModified', ':lastModified')
 					   ->setParameter('lastModified', new \DateTime())
 					   ->where('t.id = :taskId')
-					   ->setParameter('taskId', $id);					   
+					   ->setParameter('taskId', $id)
+					   ->andWhere('t.clientIp = :clientIp')
+					   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
 					   
 			$task = $er->getQuery()->getResult();
 			if($task) {
@@ -226,7 +239,10 @@ class DefaultController extends Controller
 					   ->where('t.id = :taskId')
 					   ->setParameter('taskId', $id)
 					   ->andWhere('t.deleted = :deleted')
-					   ->setParameter('deleted', true);
+					   ->setParameter('deleted', true)
+					   ->andWhere('t.clientIp = :clientIp')
+					   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
+					   
 			$task = $er->getQuery()->getResult();
 			if($task) {
 				return ajaxViewAllAction($request);
@@ -254,7 +270,10 @@ class DefaultController extends Controller
 					   ->where('t.id = :taskId')
 					   ->setParameter('taskId', $id)
 					   ->andWhere('t.deleted = :deleted')
-					   ->setParameter('deleted', false);
+					   ->setParameter('deleted', false)
+					   ->andWhere('t.clientIp = :clientIp')
+					   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
+					   
 			$task = $er->getQuery()->getResult();
 			if($task) {
 				$response = array('status' => 'success');
@@ -283,7 +302,10 @@ class DefaultController extends Controller
 					   ->where('t.id = :taskId')
 					   ->setParameter('taskId', $id)
 					   ->andWhere('t.deleted = :deleted')
-					   ->setParameter('deleted', false);
+					   ->setParameter('deleted', false)
+					   ->andWhere('t.clientIp = :clientIp')
+					   ->setParameter('clientIp', $_SERVER['REMOTE_ADDR']);
+					   
 			$task = $er->getQuery()->getResult();
 			if($task) {
 				$response = array('status' => 'success');

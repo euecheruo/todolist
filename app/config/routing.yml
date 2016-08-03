@@ -3,42 +3,42 @@ app:
     type:       annotation
     
 app_view_tasks:
-    pattern:     /tasks/view/all
+    path:     /tasks/view/all
     defaults: { _controller: AppBundle:Default:ajaxViewAll }
 
 app_view_completetasks:
-    pattern:     /tasks/view/complete
+    path:     /tasks/view/complete
     defaults: { _controller: AppBundle:Default:ajaxViewComplete }    
 
 app_view_activetasks:
-    pattern:     /tasks/view/active
+    path:     /tasks/view/active
     defaults: { _controller: AppBundle:Default:ajaxViewActive }    
     
 app_view_task:
-    pattern:     /tasks/view
+    path:     /tasks/view
     defaults: { _controller: AppBundle:Default:ajaxView }
 
 app_add_task:
-    pattern:     /tasks/add
+    path:     /tasks/add
     defaults: { _controller: AppBundle:Default:ajaxCreate }
     
 app_edit_task:
-    pattern:     /tasks/edit
+    path:     /tasks/edit
     defaults: { _controller: AppBundle:Default:ajaxUpdate }
 
 app_delete_task:
-    pattern:     /tasks/delete
+    path:     /tasks/delete
     defaults: { _controller: AppBundle:Default:ajaxRemove }
 
 app_restore_task:
-    pattern:     /tasks/restore
+    path:     /tasks/restore
     defaults: { _controller: AppBundle:Default:ajaxRestore }
     
 app_active_task:
-    pattern:     /tasks/active
+    path:     /tasks/active
     defaults: { _controller: AppBundle:Default:ajaxActive }
 
 app_complete_task:
-    pattern:     /tasks/complete
+    path:     /tasks/complete
     defaults: { _controller: AppBundle:Default:ajaxComplete }
     

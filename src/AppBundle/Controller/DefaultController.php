@@ -25,11 +25,11 @@ class DefaultController extends Controller
 	
 	public function ajaxViewAllAction(Request $request) {
 		
-        if (!$request->isXmlHttpRequest()) {
-            throw new NotFoundHttpException();
-        }
+        //if (!$request->isXmlHttpRequest()) {
+        //    throw new NotFoundHttpException();
+        //}
 		
-		$response = array('status' => 'failure', 'message' => 'Could not find Record');
+		$response = $response = array('status' => 'success', 'count' => 0);
 		$er = $this->getDoctrine()->getManager()->getRepository('AppBundle:Task')
 				   ->createQueryBuilder('t')
 				   ->where('t.deleted = :deleted')
@@ -45,7 +45,7 @@ class DefaultController extends Controller
 			$response['count'] = count($tasks);
 			return new JsonResponse($response, 200);
 		}
-		return new JsonResponse($response, 400);
+		return new JsonResponse($response, 200);
 	}
 
 	public function ajaxViewCompleteAction(Request $request) {
@@ -54,7 +54,7 @@ class DefaultController extends Controller
             throw new NotFoundHttpException();
         }
 		
-		$response = array('status' => 'failure', 'message' => 'Could not find Record');
+		$response = $response = array('status' => 'success', 'count' => 0);
 		$er = $this->getDoctrine()->getManager()->getRepository('AppBundle:Task')
 				   ->createQueryBuilder('t')
 				   ->where('t.completed = :completed')
@@ -65,14 +65,12 @@ class DefaultController extends Controller
 					
 		$tasks = $er->getQuery()->getResult();
 		if($tasks) {
-			$response = array('status' => 'success');		
 			foreach($tasks as $task) {
 				$response[] = array('id' => $task->getId(), 'title' => $task->getTitle(), 'note' => $task->getNote(), 'completed' => $task->getCompleted(), 'deleted' => $task->getDeleted());
 			}
 			$response['count'] = count($tasks);
-			return new JsonResponse($response, 200);
 		}
-		return new JsonResponse($response, 400);
+		return new JsonResponse($response, 200);
 	}
 
 	public function ajaxViewActiveAction(Request $request) {
@@ -81,7 +79,7 @@ class DefaultController extends Controller
             throw new NotFoundHttpException();
         }
 		
-		$response = array('status' => 'failure', 'message' => 'Could not find Record');
+		$response = $response = array('status' => 'success', 'count' => 0);
 		$er = $this->getDoctrine()->getManager()->getRepository('AppBundle:Task')
 				   ->createQueryBuilder('t')
 				   ->where('t.completed = :completed')
@@ -92,14 +90,12 @@ class DefaultController extends Controller
 					
 		$tasks = $er->getQuery()->getResult();
 		if($tasks) {
-			$response = array('status' => 'success');		
 			foreach($tasks as $task) {
 				$response[] = array('id' => $task->getId(), 'title' => $task->getTitle(), 'note' => $task->getNote(), 'completed' => $task->getCompleted(), 'deleted' => $task->getDeleted());
 			}
 			$response['count'] = count($tasks);
-			return new JsonResponse($response, 200);
 		}
-		return new JsonResponse($response, 400);
+		return new JsonResponse($response, 200);
 	}
 	
 	public function ajaxViewAction(Request $request) {

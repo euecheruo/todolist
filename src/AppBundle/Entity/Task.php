@@ -34,8 +34,8 @@ class Task
      * @ORM\Column(name="note", type="text", nullable=true)
      */
     private $note;
-
-    /**
+    
+	/**
      * @var bool
      *
      * @ORM\Column(name="completed", type="boolean")
@@ -75,6 +75,7 @@ class Task
 		$datetime = new \DateTime();
 		$this->title = '';
 		$this->note = '';
+		$this->editing = false;
 		$this->completed = false;
 		$this->deleted = false;
 		$this->clientIp = $_SERVER['REMOTE_ADDR'];
@@ -137,7 +138,7 @@ class Task
     {
         return $this->note;
     }
-
+    
     /**
      * Set completed
      *

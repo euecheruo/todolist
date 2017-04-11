@@ -1,44 +1,41 @@
 app:
     resource:   "@AppBundle/Controller/"
     type:       annotation
-    
-app_view_tasks:
-    path:     /tasks/view/all
-    defaults: { _controller: AppBundle:Default:ajaxViewAll }
 
-app_view_completetasks:
-    path:     /tasks/view/complete
-    defaults: { _controller: AppBundle:Default:ajaxViewComplete }    
+app_taskapi_gettasks:
+    pattern:  /api/v1/tasks
+    defaults: { _controller: AppBundle:TaskApi:getTasks, _format: ~ }
+    requirements:
+        _method: GET
 
-app_view_activetasks:
-    path:     /tasks/view/active
-    defaults: { _controller: AppBundle:Default:ajaxViewActive }    
-    
-app_view_task:
-    path:     /tasks/view
-    defaults: { _controller: AppBundle:Default:ajaxView }
+app_taskapi_gettask:
+    pattern:  /api/v1/tasks/{id}
+    defaults: { _controller: AppBundle:TaskApi:getTask, _format: ~ }
+    requirements:
+        _method: GET
+        id: "\d+"
 
-app_add_task:
-    path:     /tasks/add
-    defaults: { _controller: AppBundle:Default:ajaxCreate }
-    
-app_edit_task:
-    path:     /tasks/edit
-    defaults: { _controller: AppBundle:Default:ajaxUpdate }
+app_taskapi_posttasks:
+    pattern:  /api/v1/tasks
+    defaults: { _controller: AppBundle:TaskApi:postTasks, _format: ~ }
+    requirements:
+        _method: POST
 
-app_delete_task:
-    path:     /tasks/delete
-    defaults: { _controller: AppBundle:Default:ajaxRemove }
+app_taskapi_puttask:
+    pattern:  /api/v1/tasks/{id}
+    defaults: { _controller: AppBundle:TaskApi:putTask, _format: ~ }
+    requirements:
+        _method: PATCH
 
-app_restore_task:
-    path:     /tasks/restore
-    defaults: { _controller: AppBundle:Default:ajaxRestore }
-    
-app_active_task:
-    path:     /tasks/active
-    defaults: { _controller: AppBundle:Default:ajaxActive }
+app_taskapi_delete:
+    pattern:  /api/v1/tasks/{id}
+    defaults: { _controller: AppBundle:TaskApi:delete, _format: ~ }
+    requirements:
+        _method: DELETE
 
-app_complete_task:
-    path:     /tasks/complete
-    defaults: { _controller: AppBundle:Default:ajaxComplete }
-    
+NelmioApiDocBundle:
+    resource:   "@NelmioApiDocBundle/Resources/config/routing.yml"
+    prefix:       /api/doc
+
+fos_js_routing:
+    resource:   "@FOSJsRoutingBundle/Resources/config/routing/routing.xml"

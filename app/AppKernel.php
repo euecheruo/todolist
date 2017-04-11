@@ -2,6 +2,7 @@
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Nelmio\ApiDocBundle\NelmioApiDocBundle;
 
 class AppKernel extends Kernel
 {
@@ -15,6 +16,10 @@ class AppKernel extends Kernel
             new Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
             new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
             new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+        	new JMS\SerializerBundle\JMSSerializerBundle(),
+        	new FOS\RestBundle\FOSRestBundle(),
+        	new FOS\JsRoutingBundle\FOSJsRoutingBundle(),
+        	new Nelmio\ApiDocBundle\NelmioApiDocBundle(),	
             new AppBundle\AppBundle(),
         );
 

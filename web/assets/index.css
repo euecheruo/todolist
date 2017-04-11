@@ -66,7 +66,7 @@ input[type="checkbox"] {
 	text-rendering: optimizeLegibility;
 }
 
-#new-todo,
+.new-todo,
 .edit {
 	position: relative;
 	margin: 0;
@@ -87,7 +87,7 @@ input[type="checkbox"] {
 	font-smoothing: antialiased;
 }
 
-#new-todo {
+.new-todo {
 	padding: 16px 16px 16px 60px;
 	border: none;
 	background: rgba(0, 0, 0, 0.003);
@@ -104,7 +104,7 @@ label[for='toggle-all'] {
 	display: none;
 }
 
-#toggle-all {
+.toggle-all {
 	position: absolute;
 	top: -55px;
 	left: -12px;
@@ -114,14 +114,14 @@ label[for='toggle-all'] {
 	border: none; /* Mobile Safari */
 }
 
-#toggle-all:before {
+.toggle-all:before {
 	content: '❯';
 	font-size: 22px;
 	color: #e6e6e6;
 	padding: 10px 27px 10px 27px;
 }
 
-#toggle-all:checked:before {
+.toggle-all:checked:before {
 	color: #737373;
 }
 
@@ -199,7 +199,7 @@ label[for='toggle-all'] {
 	position: absolute;
 	top: 0;
 	right: 10px;
-	bottom: 0;
+	bottom: 5px;
 	width: 40px;
 	height: 40px;
 	margin: auto 0;

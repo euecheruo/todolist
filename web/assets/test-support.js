@@ -2416,14 +2416,14 @@ requireModule("ember-testing");
 }());
 
 /*!
- * QUnit 2.3.0
+ * QUnit 2.3.3
  * https://qunitjs.com/
  *
  * Copyright jQuery Foundation and other contributors
  * Released under the MIT license
  * https://jquery.org/license
  *
- * Date: 2017-03-29T15:13Z
+ * Date: 2017-06-02T14:07Z
  */
 (function (global$1) {
   'use strict';
@@ -2431,6 +2431,7 @@ requireModule("ember-testing");
   global$1 = 'default' in global$1 ? global$1['default'] : global$1;
 
   var window = global$1.window;
+  var self$1 = global$1.self;
   var console = global$1.console;
   var setTimeout = global$1.setTimeout;
   var clearTimeout = global$1.clearTimeout;
@@ -3051,7 +3052,8 @@ requireModule("ember-testing");
   		name: "",
   		tests: [],
   		childModules: [],
-  		testsRun: 0
+  		testsRun: 0,
+  		unskippedTestsRun: 0
   	},
 
   	callbacks: {},
@@ -3514,12 +3516,6 @@ requireModule("ember-testing");
   		var elapsedTime = now() - start;
 
   		if (!defined.setTimeout || config.updateRate <= 0 || elapsedTime < config.updateRate) {
-  			if (config.current) {
-
-  				// Reset async tracking for each phase of the Test lifecycle
-  				config.current.usedAsync = false;
-  			}
-
   			if (priorityCount > 0) {
   				priorityCount--;
   			}
@@ -3647,7 +3643,7 @@ requireModule("ember-testing");
   		this.skipped = !!options.skip;
   		this.todo = !!options.todo;
 
-  		this.testInstance = options.testInstance;
+  		this.valid = options.valid;
 
   		this._startTime = 0;
   		this._endTime = 0;
@@ -3656,11 +3652,6 @@ requireModule("ember-testing");
   	}
 
   	createClass(TestReport, [{
-  		key: "isValid",
-  		value: function isValid() {
-  			return this.testInstance.valid();
-  		}
-  	}, {
   		key: "start",
   		value: function start(recordTime) {
   			if (recordTime) {
@@ -3726,6 +3717,19 @@ requireModule("ember-testing");
   		value: function getAssertions() {
   			return this.assertions.slice();
   		}
+
+  		// Remove actual and expected values from assertions. This is to prevent
+  		// leaking memory throughout a test suite.
+
+  	}, {
+  		key: "slimAssertions",
+  		value: function slimAssertions() {
+  			this.assertions = this.assertions.map(function (assertion) {
+  				delete assertion.actual;
+  				delete assertion.expected;
+  				return assertion;
+  			});
+  		}
   	}]);
   	return TestReport;
   }();
@@ -3741,7 +3745,6 @@ requireModule("ember-testing");
   	extend(this, settings);
   	this.assertions = [];
   	this.semaphore = 0;
-  	this.usedAsync = false;
   	this.module = config.currentModule;
   	this.stack = sourceFromStacktrace(3);
   	this.steps = [];
@@ -3749,7 +3752,7 @@ requireModule("ember-testing");
   	this.testReport = new TestReport(settings.testName, this.module.suiteReport, {
   		todo: settings.todo,
   		skip: settings.skip,
-  		testInstance: this
+  		valid: this.valid()
   	});
 
   	// Register unique strings
@@ -3763,7 +3766,8 @@ requireModule("ember-testing");
 
   	this.module.tests.push({
   		name: this.testName,
-  		testId: this.testId
+  		testId: this.testId,
+  		skip: !!settings.skip
   	});
 
   	if (settings.skip) {
@@ -3867,14 +3871,14 @@ requireModule("ember-testing");
   		    test = this;
   		return function runHook() {
   			if (hookName === "before") {
-  				if (hookOwner.testsRun !== 0) {
+  				if (hookOwner.unskippedTestsRun !== 0) {
   					return;
   				}
 
   				test.preserveEnvironment = true;
   			}
 
-  			if (hookName === "after" && hookOwner.testsRun !== numberOfTests(hookOwner) - 1 && config.queue.length > 2) {
+  			if (hookName === "after" && hookOwner.unskippedTestsRun !== numberOfUnskippedTests(hookOwner) - 1 && config.queue.length > 2) {
   				return;
   			}
 
@@ -3948,7 +3952,7 @@ requireModule("ember-testing");
   			}
   		}
 
-  		notifyTestsRan(module);
+  		notifyTestsRan(module, skipped);
 
   		// Store result when possible
   		if (storage) {
@@ -3959,7 +3963,11 @@ requireModule("ember-testing");
   			}
   		}
 
+  		// After emitting the js-reporters event we cleanup the assertion data to
+  		// avoid leaking it. It is not used by the legacy testDone callbacks.
   		emit("testEnd", this.testReport.end(true));
+  		this.testReport.slimAssertions();
+
   		runLoggingCallbacks("testDone", {
   			name: testName,
   			module: moduleName,
@@ -3979,6 +3987,20 @@ requireModule("ember-testing");
   		});
 
   		if (module.testsRun === numberOfTests(module)) {
+  			logSuiteEnd(module);
+
+  			// Check if the parent modules, iteratively, are done. If that the case,
+  			// we emit the `suiteEnd` event and trigger `moduleDone` callback.
+  			var parent = module.parentModule;
+  			while (parent && parent.testsRun === numberOfTests(parent)) {
+  				logSuiteEnd(parent);
+  				parent = parent.parentModule;
+  			}
+  		}
+
+  		config.current = undefined;
+
+  		function logSuiteEnd(module) {
   			emit("suiteEnd", module.suiteReport.end(true));
   			runLoggingCallbacks("moduleDone", {
   				name: module.name,
@@ -3989,8 +4011,6 @@ requireModule("ember-testing");
   				runtime: now() - module.stats.started
   			});
   		}
-
-  		config.current = undefined;
   	},
 
   	preserveTestEnvironment: function preserveTestEnvironment() {
@@ -4040,6 +4060,9 @@ requireModule("ember-testing");
 
 
   	pushResult: function pushResult(resultInfo) {
+  		if (this !== config.current) {
+  			throw new Error("Assertion occured after test had finished.");
+  		}
 
   		// Destructure of resultInfo = { result, actual, expected, message, negative }
   		var source,
@@ -4389,24 +4412,40 @@ requireModule("ember-testing");
   	}
   }
 
-  function numberOfTests(module) {
-  	var count = module.tests.length;
+  function collectTests(module) {
+  	var tests = [].concat(module.tests);
   	var modules = [].concat(toConsumableArray(module.childModules));
 
   	// Do a breadth-first traversal of the child modules
   	while (modules.length) {
   		var nextModule = modules.shift();
-  		count += nextModule.tests.length;
+  		tests.push.apply(tests, nextModule.tests);
   		modules.push.apply(modules, toConsumableArray(nextModule.childModules));
   	}
 
-  	return count;
+  	return tests;
   }
 
-  function notifyTestsRan(module) {
+  function numberOfTests(module) {
+  	return collectTests(module).length;
+  }
+
+  function numberOfUnskippedTests(module) {
+  	return collectTests(module).filter(function (test) {
+  		return !test.skip;
+  	}).length;
+  }
+
+  function notifyTestsRan(module, skipped) {
   	module.testsRun++;
+  	if (!skipped) {
+  		module.unskippedTestsRun++;
+  	}
   	while (module = module.parentModule) {
   		module.testsRun++;
+  		if (!skipped) {
+  			module.unskippedTestsRun++;
+  		}
   	}
   }
 
@@ -4488,10 +4527,13 @@ requireModule("ember-testing");
   				acceptCallCount = 1;
   			}
 
-  			test$$1.usedAsync = true;
   			var resume = internalStop(test$$1);
 
   			return function done() {
+  				if (config.current !== test$$1) {
+  					throw Error("assert.async callback called after test finished.");
+  				}
+
   				if (popped) {
   					test$$1.pushFailure("Too many calls to the `assert.async` callback", sourceFromStacktrace(2));
   					return;
@@ -4539,12 +4581,6 @@ requireModule("ember-testing");
   			// not exactly the test where assertion were intended to be called.
   			if (!currentTest) {
   				throw new Error("assertion outside test context, in " + sourceFromStacktrace(2));
-  			}
-
-  			if (currentTest.usedAsync === true && currentTest.semaphore === 0) {
-  				currentTest.pushFailure("Assertion after the final `assert.async` was resolved", sourceFromStacktrace(2));
-
-  				// Allow this assertion to continue running anyway...
   			}
 
   			if (!(assert instanceof Assert)) {
@@ -4809,6 +4845,11 @@ requireModule("ember-testing");
   		});
   		QUnit.config.autostart = false;
   	}
+
+  	// For Web/Service Workers
+  	if (self$1 && self$1.WorkerGlobalScope && self$1 instanceof self$1.WorkerGlobalScope) {
+  		self$1.QUnit = QUnit;
+  	}
   }
 
   var SuiteReport = function () {
@@ -4889,7 +4930,7 @@ requireModule("ember-testing");
   			var counts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : { passed: 0, failed: 0, skipped: 0, todo: 0, total: 0 };
 
   			counts = this.tests.reduce(function (counts, test) {
-  				if (test.isValid()) {
+  				if (test.valid) {
   					counts[test.getStatus()]++;
   					counts.total++;
   				}
@@ -4965,7 +5006,7 @@ requireModule("ember-testing");
   QUnit.isLocal = !(defined.document && window.location.protocol !== "file:");
 
   // Expose the current QUnit version
-  QUnit.version = "2.3.0";
+  QUnit.version = "2.3.3";
 
   function createModule(name, testEnvironment) {
   	var parentModule = moduleStack.length ? moduleStack.slice(-1)[0] : null;
@@ -4978,6 +5019,7 @@ requireModule("ember-testing");
   		tests: [],
   		moduleId: generateHash(moduleName),
   		testsRun: 0,
+  		unskippedTestsRun: 0,
   		childModules: [],
   		suiteReport: new SuiteReport(name, parentSuite)
   	};
@@ -6041,13 +6083,19 @@ requireModule("ember-testing");
 
   				message += "<tr class='test-actual'><th>Result: </th><td><pre>" + escapeText(actual) + "</pre></td></tr>";
 
-  				// Don't show diff if actual or expected are booleans
-  				if (!/^(true|false)$/.test(actual) && !/^(true|false)$/.test(expected)) {
+  				if (typeof details.actual === "number" && typeof details.expected === "number") {
+  					if (!isNaN(details.actual) && !isNaN(details.expected)) {
+  						showDiff = true;
+  						diff = details.actual - details.expected;
+  						diff = (diff > 0 ? "+" : "") + diff;
+  					}
+  				} else if (typeof details.actual !== "boolean" && typeof details.expected !== "boolean") {
   					diff = QUnit.diff(expected, actual);
+
+  					// don't show diff if there is zero overlap
   					showDiff = stripHtml(diff).length !== stripHtml(expected).length + stripHtml(actual).length;
   				}
 
-  				// Don't show diff if expected and actual are totally different
   				if (showDiff) {
   					message += "<tr class='test-diff'><th>Diff: </th><td><pre>" + diff + "</pre></td></tr>";
   				}
@@ -7706,11 +7754,15 @@ define('ember-qunit/adapter', ['exports', 'ember', 'qunit'], function (exports, 
     },
 
     asyncStart: function asyncStart() {
-      this.doneCallbacks.push(_qunit['default'].config.current.assert.async());
+      this.doneCallbacks.push(_qunit['default'].config.current ? _qunit['default'].config.current.assert.async() : null);
     },
 
     asyncEnd: function asyncEnd() {
-      this.doneCallbacks.pop()();
+      var done = this.doneCallbacks.pop();
+      // This can be null if asyncStart() was called outside of a test
+      if (done) {
+        done();
+      }
     },
 
     exception: function exception(error) {
@@ -7750,75 +7802,78 @@ define('ember-qunit/qunit-module', ['exports', 'ember', 'qunit'], function (expo
 
   exports.createModule = createModule;
 
-  function beforeEachCallback(callbacks) {
+  function noop() {}
+
+  function callbackFor(name, callbacks) {
     if (typeof callbacks !== 'object') {
-      return;
+      return noop;
     }
     if (!callbacks) {
-      return;
+      return noop;
     }
 
-    var beforeEach;
+    var callback = noop;
 
-    if (callbacks.beforeEach) {
-      beforeEach = callbacks.beforeEach;
-      delete callbacks.beforeEach;
+    if (callbacks[name]) {
+      callback = callbacks[name];
+      delete callbacks[name];
     }
 
-    return beforeEach;
-  }
-
-  function afterEachCallback(callbacks) {
-    if (typeof callbacks !== 'object') {
-      return;
-    }
-    if (!callbacks) {
-      return;
-    }
-
-    var afterEach;
-
-    if (callbacks.afterEach) {
-      afterEach = callbacks.afterEach;
-      delete callbacks.afterEach;
-    }
-
-    return afterEach;
+    return callback;
   }
 
   function createModule(Constructor, name, description, callbacks) {
-    var _beforeEach = beforeEachCallback(callbacks || description);
-    var _afterEach = afterEachCallback(callbacks || description);
+    if (!callbacks && typeof description === 'object') {
+      callbacks = description;
+      description = name;
+    }
 
-    var module = new Constructor(name, description, callbacks);
+    var _before = callbackFor('before', callbacks);
+    var _beforeEach = callbackFor('beforeEach', callbacks);
+    var _afterEach = callbackFor('afterEach', callbacks);
+    var _after = callbackFor('after', callbacks);
 
-    (0, _qunit.module)(module.name, {
+    var module;
+    var moduleName = typeof description === 'string' ? description : name;
+
+    (0, _qunit.module)(moduleName, {
+      before: function before() {
+        // storing this in closure scope to avoid exposing these
+        // private internals to the test context
+        module = new Constructor(name, description, callbacks);
+        return _before.apply(this, arguments);
+      },
+
       beforeEach: function beforeEach() {
-        var _this = this,
+        var _module2,
+            _this = this,
             _arguments = arguments;
 
         // provide the test context to the underlying module
         module.setContext(this);
 
-        return module.setup.apply(module, arguments).then(function () {
-          if (_beforeEach) {
-            return _beforeEach.apply(_this, _arguments);
-          }
+        return (_module2 = module).setup.apply(_module2, arguments).then(function () {
+          return _beforeEach.apply(_this, _arguments);
         });
       },
 
       afterEach: function afterEach() {
         var _arguments2 = arguments;
 
-        var result = undefined;
-
-        if (_afterEach) {
-          result = _afterEach.apply(this, arguments);
-        }
-
+        var result = _afterEach.apply(this, arguments);
         return _ember['default'].RSVP.resolve(result).then(function () {
-          return module.teardown.apply(module, _arguments2);
+          var _module3;
+
+          return (_module3 = module).teardown.apply(_module3, _arguments2);
         });
+      },
+
+      after: function after() {
+        try {
+          return _after.apply(this, arguments);
+        } finally {
+          _after = _afterEach = _before = _beforeEach = callbacks = module = null;
+        }
       }
     });
   }

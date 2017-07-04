@@ -24,7 +24,7 @@ define('todolist/tests/controllers/index.jshint.lint-test', ['exports'], functio
   QUnit.module('JSHint | controllers/index.js');
   QUnit.test('should pass jshint', function (assert) {
     assert.expect(1);
-    assert.ok(false, 'controllers/index.js should pass jshint.\ncontrollers/index.js: line 32, col 30, \'index\' is defined but never used.\ncontrollers/index.js: line 43, col 29, \'task\' is defined but never used.\n\n2 errors');
+    assert.ok(true, 'controllers/index.js should pass jshint.');
   });
 });
 define('todolist/tests/helpers/destroy-app', ['exports', 'ember'], function (exports, _ember) {
